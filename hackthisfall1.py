@@ -6,12 +6,9 @@ from PIL import Image
 import google.generativeai as genai
 
 # Retrieve the Gemini API key securely from an environment variable
-api_key = os.getenv('GOOGLE_API_KEY')
-if not api_key:
-    st.error("API key not found. Please set the GOOGLE_API_KEY environment variable.")
-else:
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+api_key = os.getenv('GENAI_API_KEY')
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Custom CSS for a water-inspired theme
 st.markdown("""
@@ -21,6 +18,7 @@ st.markdown("""
         background-color: #E6F7FF;
         font-family: 'Open Sans', sans-serif;
     }
+
     /* Header styling */
     .header {
         background: #1A73E8;
@@ -30,6 +28,7 @@ st.markdown("""
         font-size: 32px;
         font-weight: bold;
     }
+
     /* Banner styling for the landing page */
     .banner {
         background: linear-gradient(135deg, #74ebd5, #acb6e5);
@@ -39,6 +38,7 @@ st.markdown("""
         border-radius: 10px;
         margin: 30px 0;
     }
+
     /* Adjusted Get Started and Analyze Another Image button container for center alignment */
     .center-button-container {
         display: flex;
@@ -58,6 +58,7 @@ st.markdown("""
         background-color: #0b57d0;
         color: white;
     }
+
     /* Footer styling */
     .footer {
         text-align: center;
@@ -90,9 +91,13 @@ def landing_page():
         st.session_state.page = "main"
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Function to compare images using color moments
+# Function to compare images using color moments with error handling
 def compare_images(img1_path, img2_file):
     img1 = load_image(img1_path)  # Use cached image loader
+    if img1 is None:
+        st.error(f"Failed to load image at path: {img1_path}")
+        return None
+
     img2 = Image.open(img2_file)
     img2 = np.array(img2)
 
@@ -132,7 +137,7 @@ def generate_gemini_comments(impurity_level):
     except Exception as e:
         return f"An error occurred while generating comments from our model: {str(e)}"
 
-# Main analysis page function
+# Main analysis page function with error handling for image loading
 def analysis_page():
     st.markdown('<div class="header">Water Purity Analysis</div>', unsafe_allow_html=True)
     uploaded_test_image = st.file_uploader("Upload a test image (JPG, JPEG, PNG)", type=["jpg", "jpeg", "png"])
@@ -140,7 +145,7 @@ def analysis_page():
     if uploaded_test_image:
         st.image(uploaded_test_image, caption="Uploaded Test Image", use_container_width=True)
         
-        label_dir = "C:/_mksp/Xylem_Hackathon/label_images"
+        label_dir = "./label_images"  # Use a relative path
         label_images = ["0.jpg", "25.jpg", "50.jpg", "75.jpg", "100.jpg"]
         
         distances = []
@@ -148,7 +153,10 @@ def analysis_page():
             label_path = f"{label_dir}/{label}"
             try:
                 distance = compare_images(label_path, uploaded_test_image)
-                distances.append(distance)
+                if distance is not None:
+                    distances.append(distance)
+                else:
+                    return  # Stop if an image fails to load
             except FileNotFoundError:
                 st.error(f"Labeled image {label} not found at path {label_path}.")
                 return
@@ -177,3 +185,5 @@ else:
 
 # Footer with custom text
 st.markdown('<div class="footer">Designed by Srepadmashiny K & Sree Ranjane M K for Hack This Fall 2024 Virtual Hackathon</div>', unsafe_allow_html=True)
+
+
