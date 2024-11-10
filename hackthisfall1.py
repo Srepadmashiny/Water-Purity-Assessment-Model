@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 import cv2
 import numpy as np
@@ -72,6 +70,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Cache loading of images to save processing time
+@st.cache_data
+def load_image(img_path):
+    return cv2.imread(img_path)
+
 # Function for the landing page
 def landing_page():
     st.markdown('<div class="header">Water Purity Analyzer</div>', unsafe_allow_html=True)
@@ -88,7 +91,7 @@ def landing_page():
 
 # Function to compare images using color moments
 def compare_images(img1_path, img2_file):
-    img1 = cv2.imread(img1_path)
+    img1 = load_image(img1_path)  # Use cached image loader
     img2 = Image.open(img2_file)
     img2 = np.array(img2)
 
@@ -115,7 +118,8 @@ def determine_impurity_level(distances):
     min_distance_label = labels[np.argmin(distances)]
     return min_distance_label
 
-# Generate comments from Gemini based on impurity level
+# Cache the Gemini API call to reduce redundant requests
+@st.cache_data
 def generate_gemini_comments(impurity_level):
     prompt = (
         f"Gemini Pro Water Purity Analysis: The predicted water impurity level is {impurity_level}. "
@@ -172,3 +176,4 @@ else:
 
 # Footer with custom text
 st.markdown('<div class="footer">Designed by Srepadmashiny K & Sree Ranjane M K for Hack This Fall 2024 Virtual Hackathon</div>', unsafe_allow_html=True)
+
