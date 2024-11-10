@@ -6,9 +6,12 @@ from PIL import Image
 import google.generativeai as genai
 
 # Retrieve the Gemini API key securely from an environment variable
-api_key = os.getenv('GENAI_API_KEY')
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-1.5-flash')
+api_key = os.getenv('GOOGLE_API_KEY')
+if not api_key:
+    st.error("API key not found. Please set the GOOGLE_API_KEY environment variable.")
+else:
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Custom CSS for a water-inspired theme
 st.markdown("""
@@ -18,7 +21,6 @@ st.markdown("""
         background-color: #E6F7FF;
         font-family: 'Open Sans', sans-serif;
     }
-
     /* Header styling */
     .header {
         background: #1A73E8;
@@ -28,7 +30,6 @@ st.markdown("""
         font-size: 32px;
         font-weight: bold;
     }
-
     /* Banner styling for the landing page */
     .banner {
         background: linear-gradient(135deg, #74ebd5, #acb6e5);
@@ -38,7 +39,6 @@ st.markdown("""
         border-radius: 10px;
         margin: 30px 0;
     }
-
     /* Adjusted Get Started and Analyze Another Image button container for center alignment */
     .center-button-container {
         display: flex;
@@ -58,7 +58,6 @@ st.markdown("""
         background-color: #0b57d0;
         color: white;
     }
-
     /* Footer styling */
     .footer {
         text-align: center;
