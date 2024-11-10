@@ -7,8 +7,11 @@ import google.generativeai as genai
 
 # Retrieve the Gemini API key securely from an environment variable
 api_key = os.getenv('GENAI_API_KEY')
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-1.5-flash')
+if api_key:
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    st.error("API key not found. Please set the GENAI_API_KEY environment variable.")
 
 # Custom CSS for a water-inspired theme
 st.markdown("""
@@ -75,7 +78,10 @@ st.markdown("""
 # Cache loading of images to save processing time
 @st.cache_data
 def load_image(img_path):
-    return cv2.imread(img_path)
+    image = cv2.imread(img_path)
+    if image is None:
+        st.warning(f"Failed to load image from {img_path}. Please check the file path.")
+    return image
 
 # Function for the landing page
 def landing_page():
@@ -93,9 +99,8 @@ def landing_page():
 
 # Function to compare images using color moments with error handling
 def compare_images(img1_path, img2_file):
-    img1 = load_image(img1_path)  # Use cached image loader
+    img1 = load_image(img1_path)
     if img1 is None:
-        st.error(f"Failed to load image at path: {img1_path}")
         return None
 
     img2 = Image.open(img2_file)
@@ -145,21 +150,18 @@ def analysis_page():
     if uploaded_test_image:
         st.image(uploaded_test_image, caption="Uploaded Test Image", use_container_width=True)
         
-        label_dir = "./label_images"  # Use a relative path
+        label_dir = "./label_images"
         label_images = ["0.jpg", "25.jpg", "50.jpg", "75.jpg", "100.jpg"]
         
         distances = []
         for label in label_images:
             label_path = f"{label_dir}/{label}"
-            try:
-                distance = compare_images(label_path, uploaded_test_image)
-                if distance is not None:
-                    distances.append(distance)
-                else:
-                    return  # Stop if an image fails to load
-            except FileNotFoundError:
-                st.error(f"Labeled image {label} not found at path {label_path}.")
-                return
+            distance = compare_images(label_path, uploaded_test_image)
+            if distance is not None:
+                distances.append(distance)
+            else:
+                st.error(f"Could not process image at {label_path}.")
+                return  # Stop if an image fails to load
 
         impurity_level = determine_impurity_level(distances)
         st.write(f"**Predicted Water Impurity Level:** {impurity_level}")
@@ -185,5 +187,3 @@ else:
 
 # Footer with custom text
 st.markdown('<div class="footer">Designed by Srepadmashiny K & Sree Ranjane M K for Hack This Fall 2024 Virtual Hackathon</div>', unsafe_allow_html=True)
-
-
