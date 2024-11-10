@@ -1,11 +1,13 @@
+import os
 import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
 import google.generativeai as genai
 
-# Configure your Gemini API key
-genai.configure(api_key='AIzaSyC0FlgJ93BIdfBmhttXU591pg8wddnUg8M')  # Replace with your actual API key
+# Retrieve the Gemini API key securely from an environment variable
+api_key = os.getenv('GENAI_API_KEY')
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Custom CSS for a water-inspired theme
@@ -176,4 +178,3 @@ else:
 
 # Footer with custom text
 st.markdown('<div class="footer">Designed by Srepadmashiny K & Sree Ranjane M K for Hack This Fall 2024 Virtual Hackathon</div>', unsafe_allow_html=True)
-
